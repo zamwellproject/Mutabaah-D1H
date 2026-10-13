@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#047857">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<title>Mutabaah Harian Santri</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+  body { background:#f0fdf4; -webkit-tap-highlight-color: transparent; }
+  .material-symbols-outlined { font-variation-settings:'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24; vertical-align:middle; }
+  .switch{width:3rem;height:1.75rem;background:#cbd5e1;border-radius:9999px;position:relative;transition:.2s;display:block}
+  .switch::after{content:'';position:absolute;top:2px;left:2px;width:1.5rem;height:1.5rem;background:#fff;border-radius:9999px;transition:.2s;box-shadow:0 1px 2px rgba(0,0,0,.3)}
+  input:checked + .switch{background:#059669}
+  input:checked + .switch::after{transform:translateX(1.25rem)}
+  input:focus-visible + .switch{outline:3px solid #6ee7b7;outline-offset:2px}
+  label.relative{touch-action:manipulation;-webkit-user-select:none;user-select:none}
+  input[type="date"], input[type="month"] { max-width: 100%; min-width: 0; box-sizing: border-box; }
+  input[type="date"], input[type="month"], select { display:block; width:100%; }
+  select { min-width:0; max-width:100%; box-sizing:border-box; }
+  .tbl th,.tbl td{border:1px solid #d1fae5;padding:6px 8px;vertical-align:middle}
+  .tbl th{background:#047857;color:#fff;font-weight:600;text-align:center;white-space:nowrap}
+  .tbl tbody tr:nth-child(even){background:#f0fdf4}
+  .badge{display:block;border-radius:9999px;padding:1px 8px;font-size:11px;line-height:18px;text-align:center;white-space:nowrap;margin:1px 0}
+</style>
+</head>
+<body class="min-h-screen text-slate-800 font-sans">
+
+<!-- HEADER -->
+<header class="sticky top-0 z-30 bg-emerald-700 text-white shadow">
+  <div class="max-w-5xl mx-auto px-4 py-3 flex items-center gap-3">
+    <span class="material-symbols-outlined text-3xl">mosque</span>
+    <div class="flex-1 min-w-0">
+      <h1 class="font-bold leading-tight truncate">Mutabaah Harian Santri</h1>
+      <p id="syncStatus" class="text-xs text-emerald-100 truncate">Menyiapkan…</p>
+    </div>
+    <button id="btnInstall" class="hidden text-xs bg-white/15 hover:bg-white/25 rounded-full px-3 py-1.5 items-center gap-1">
+      <span class="material-symbols-outlined" style="font-size:18px">install_mobile</span>Pasang
+    </button>
+    <div id="adminArea"></div>
+  </div>
+  <nav class="max-w-5xl mx-auto px-4 pb-2 flex gap-2">
+    <button data-tab="form" class="tabBtn flex-1 rounded-full py-2 text-sm font-semibold flex items-center justify-center gap-1">
+      <span class="material-symbols-outlined" style="font-size:20px">edit_note</span>Isi Mutabaah
+    </button>
+    <button data-tab="rekap" class="tabBtn flex-1 rounded-full py-2 text-sm font-semibold flex items-center justify-center gap-1">
+      <span class="material-symbols-outlined" style="font-size:20px">table_chart</span>Rekapitulasi
+    </button>
+  </nav>
+</header>
+
+<main class="max-w-5xl mx-auto px-4 py-5 pb-24">
+
+  <!-- ===== FORM ===== -->
+  <section id="view-form">
+    <form id="mutabaahForm" class="space-y-4" novalidate>
+      <div class="bg-white rounded-2xl shadow-sm border border-emerald-100 p-4 grid gap-4 grid-cols-1 sm:grid-cols-2 min-w-0">
+        <div class="min-w-0">
+          <label class="block text-sm font-semibold mb-1" for="nama">Nama Santri</label>
+          <select id="nama" class="w-full rounded-xl border border-slate-300 px-3 py-2.5 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500" required></select>
+        </div>
+        <div class="min-w-0">
+          <label class="block text-sm font-semibold mb-1" for="tanggal">Tanggal Laporan</label>
+          <input id="tanggal" type="date" class="w-full rounded-xl border border-slate-300 px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-500" required>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-2xl shadow-sm border border-emerald-100 p-4 space-y-3">
+        <h2 class="font-bold text-emerald-800 flex items-center gap-2"><span class="material-symbols-outlined">dark_mode</span>Ibadah Sunnah &amp; Dzikir</h2>
+
+        <div>
+          <div class="flex items-center justify-between py-1">
+            <span class="font-medium">Sholat Tahajjud</span>
+            <span class="flex items-center gap-3">
+              <span class="text-sm text-slate-500 w-10 text-right" data-state-for="tahajjud">Tidak</span>
+              <label class="relative inline-flex items-center cursor-pointer" aria-label="Sholat Tahajjud"><input type="checkbox" id="tahajjud" class="sr-only"><span class="switch"></span></label>
+            </span>
+          </div>
+          <div id="rakaatWrap" class="hidden mt-2">
+            <label class="block text-sm text-slate-600 mb-1" for="rakaat">Jumlah Rakaat</label>
+            <input id="rakaat" type="number" inputmode="numeric" min="2" max="40" step="1" placeholder="contoh: 8" class="w-full sm:w-40 rounded-xl border border-slate-300 px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+          </div>
+        </div>
+
+        <div class="flex items-center justify-between py-1 border-t border-slate-100 pt-3">
+          <span class="font-medium">Dzikir Pagi</span>
+          <span class="flex items-center gap-3">
+            <span class="text-sm text-slate-500 w-10 text-right" data-state-for="dzikirPagi">Tidak</span>
+            <label class="relative inline-flex items-center cursor-pointer" aria-label="Dzikir Pagi"><input type="checkbox" id="dzikirPagi" class="sr-only"><span class="switch"></span></label>
+          </span>
+        </div>
+        <div class="flex items-center justify-between py-1 border-t border-slate-100 pt-3">
+          <span class="font-medium">Dzikir Sore</span>
+          <span class="flex items-center gap-3">
+            <span class="text-sm text-slate-500 w-10 text-right" data-state-for="dzikirSore">Tidak</span>
+            <label class="relative inline-flex items-center cursor-pointer" aria-label="Dzikir Sore"><input type="checkbox" id="dzikirSore" class="sr-only"><span class="switch"></span></label>
+          </span>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-2xl shadow-sm border border-emerald-100 p-4">
+        <h2 class="font-bold text-emerald-800 flex items-center gap-2 mb-3"><span class="material-symbols-outlined">schedule</span>Sholat Wajib 5 Waktu</h2>
+        <div id="prayerList" class="grid gap-3 sm:grid-cols-2"></div>
+      </div>
+
+      <div class="bg-white rounded-2xl shadow-sm border border-emerald-100 p-4">
+        <label class="block font-bold text-emerald-800 mb-2" for="catatan">Catatan / Evaluasi Harian <span class="text-slate-400 font-normal text-sm">(opsional)</span></label>
+        <textarea id="catatan" rows="3" maxlength="1000" class="w-full rounded-xl border border-slate-300 px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-500" placeholder="Tulis catatan atau evaluasi hari ini…"></textarea>
+      </div>
+
+      <button id="btnSubmit" type="submit" class="w-full rounded-2xl bg-emerald-600 hover:bg-emerald-700 active:scale-[.99] text-white font-bold py-3.5 shadow flex items-center justify-center gap-2 disabled:opacity-60">
+        <span class="material-symbols-outlined">send</span><span>Kirim Laporan</span>
+      </button>
+      <p id="pendingNote" class="hidden text-center text-sm text-amber-700"></p>
+    </form>
+  </section>
+
+  <!-- ===== REKAP ===== -->
+  <section id="view-rekap" class="hidden space-y-4">
+    <div class="bg-white rounded-2xl shadow-sm border border-emerald-100 p-4 space-y-3">
+      <h2 class="font-bold text-emerald-800 flex items-center gap-2"><span class="material-symbols-outlined">filter_alt</span>Filter Waktu</h2>
+      <div class="grid gap-3 grid-cols-1 sm:grid-cols-2 min-w-0">
+        <div class="min-w-0">
+          <label class="block text-sm font-semibold mb-1" for="fMode">Kategori</label>
+          <select id="fMode" class="w-full rounded-xl border border-slate-300 px-3 py-2.5 bg-white">
+            <option value="day">Per Hari</option>
+            <option value="week">Per Pekan (Senin – Ahad)</option>
+            <option value="month">Per Bulan</option>
+            <option value="range">Rentang Waktu</option>
+            <option value="all">Semua Data</option>
+          </select>
+        </div>
+        <div class="min-w-0">
+          <label class="block text-sm font-semibold mb-1" for="fSantri">Santri</label>
+          <select id="fSantri" class="w-full rounded-xl border border-slate-300 px-3 py-2.5 bg-white"></select>
+        </div>
+        <div id="gDay" class="min-w-0"><label class="block text-sm font-semibold mb-1" for="fDay">Tanggal</label><input id="fDay" type="date" class="w-full min-w-0 rounded-xl border border-slate-300 px-3 py-2.5"></div>
+        <div id="gWeek" class="hidden min-w-0"><label class="block text-sm font-semibold mb-1" for="fWeek">Tanggal dalam pekan</label><input id="fWeek" type="date" class="w-full min-w-0 rounded-xl border border-slate-300 px-3 py-2.5"></div>
+        <div id="gMonth" class="hidden min-w-0"><label class="block text-sm font-semibold mb-1" for="fMonth">Bulan &amp; Tahun</label><input id="fMonth" type="month" class="w-full min-w-0 rounded-xl border border-slate-300 px-3 py-2.5"></div>
+        <div id="gRange" class="hidden sm:col-span-2 grid grid-cols-2 gap-3 min-w-0">
+          <div class="min-w-0"><label class="block text-sm font-semibold mb-1" for="fStart">Dari</label><input id="fStart" type="date" class="w-full min-w-0 rounded-xl border border-slate-300 px-3 py-2.5"></div>
+          <div class="min-w-0"><label class="block text-sm font-semibold mb-1" for="fEnd">Sampai</label><input id="fEnd" type="date" class="w-full min-w-0 rounded-xl border border-slate-300 px-3 py-2.5"></div>
+        </div>
+      </div>
+      <div class="flex flex-wrap gap-2 pt-1">
+        <button id="btnReload" class="rounded-xl border border-emerald-600 text-emerald-700 px-4 py-2 text-sm font-semibold flex items-center gap-1"><span class="material-symbols-outlined" style="font-size:20px">sync</span>Muat Ulang</button>
+        <button id="btnPng" class="rounded-xl bg-emerald-600 text-white px-4 py-2 text-sm font-semibold flex items-center gap-1 disabled:opacity-60"><span class="material-symbols-outlined" style="font-size:20px">image</span><span>Unduh Laporan PNG</span></button>
+        <button id="btnDelAll" class="rounded-xl bg-rose-600 text-white px-4 py-2 text-sm font-semibold flex items-center gap-1"><span class="material-symbols-outlined" style="font-size:20px">delete_forever</span>Hapus Semua Data</button>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-2xl shadow-sm border border-emerald-100 p-4">
+      <div class="flex flex-wrap items-baseline justify-between gap-2 mb-3">
+        <h2 class="font-bold text-emerald-800">Rekapitulasi</h2>
+        <p id="rekapInfo" class="text-sm text-slate-500"></p>
+      </div>
+      <div id="rekapTable" class="overflow-x-auto"></div>
+    </div>
+  </section>
+</main>
+
+<!-- MODAL ADMIN -->
+<div id="adminModal" class="hidden fixed inset-0 z-50 bg-black/50 items-center justify-center p-4">
+  <form id="adminForm" class="bg-white rounded-2xl shadow-xl w-full max-w-sm p-5 space-y-3">
+    <div class="flex items-center gap-2 text-emerald-800">
+      <span class="material-symbols-outlined">admin_panel_settings</span>
+      <h3 class="font-bold text-lg">Login Admin</h3>
+    </div>
+    <p class="text-sm text-slate-500">Fitur unduh laporan dan hapus data hanya untuk admin.</p>
+    <input id="admUser" type="text" autocomplete="username" placeholder="Username" class="w-full rounded-xl border border-slate-300 px-3 py-2.5" required>
+    <input id="admPass" type="password" autocomplete="current-password" placeholder="Password" class="w-full rounded-xl border border-slate-300 px-3 py-2.5" required>
+    <p id="admErr" class="hidden text-sm text-rose-600"></p>
+    <div class="flex gap-2 pt-1">
+      <button type="button" id="admCancel" class="flex-1 rounded-xl border border-slate-300 py-2.5 font-semibold">Batal</button>
+      <button type="submit" id="admSubmit" class="flex-1 rounded-xl bg-emerald-600 text-white py-2.5 font-semibold disabled:opacity-60">Masuk</button>
+    </div>
+  </form>
+</div>
+
+<!-- Host render PNG (di luar layar) -->
+<div id="exportHost" style="position:absolute;left:-99999px;top:0;"></div>
+
+<!-- Toast -->
+<div id="toast" role="status" aria-live="polite" class="hidden" style="top:calc(env(safe-area-inset-top, 0px) + 1rem)"></div>
+
+<script>
+/* =====================================================
+   KONFIGURASI — ganti dengan URL Web App Apps Script Anda
+   ===================================================== */
+const API_URL = 'https://script.google.com/macros/s/AKfycbzguhs7uLTkY3cbSLJXQBfTYa_-iB9sqK9_-aU-iCaH5-x-gHQbReMZsoeM6yuaIHoK/exec';
+
+const SANTRI = [
+  'Muhammad Ihsan Abdurrahman',
+  'Achmad Faiq an-nabigh',
+  'Bima Radhika Aryan',
+  'Kenzie Jusuf Antoni',
+  'Muhammad Haidar Adam',
+  'Azzam Wildan Gaza',
+  'Amiirul Wathan',
+  'Muhammad Asyam Izdihar',
+  'Kenzo Caesaro',
+  'Daffa Maulana',
+  'Ibrahim Kenzie prayata'
+];
+const PRAYERS = [['shubuh','Shubuh'],['zhuhur','Zhuhur'],['ashar','Ashar'],['maghrib','Maghrib'],['isya','Isya']];
+
+/* ---------- Util ---------- */
+const $ = (s) => document.querySelector(s);
+const $$ = (s) => Array.from(document.querySelectorAll(s));
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const pad = (n) => String(n).padStart(2, '0');
+const fmt = (d) => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const parseD = (s) => { const [y,m,d] = s.split('-').map(Number); return new Date(y, m-1, d); };
+const todayStr = () => fmt(new Date());
+const idDate = (s) => parseD(s).toLocaleDateString('id-ID', { day:'numeric', month:'short', year:'numeric' });
+const idDay = (s) => parseD(s).toLocaleDateString('id-ID', { weekday:'short' });
+const configured = () => API_URL && !API_URL.startsWith('GANTI');
+
+let records = [];
+let toastTimer;
+const TOAST_STYLE = {
+  ok:    ['bg-emerald-700', 'check_circle', 'Berhasil'],
+  warn:  ['bg-amber-600',   'cloud_off',    'Perhatian'],
+  error: ['bg-rose-600',    'error',        'Perhatian']
+};
+/** Notifikasi: type 'ok' | 'warn' | 'error'; title opsional (judul tebal). */
+function toast(msg, type = 'ok', title) {
+  const t = $('#toast');
+  const [bg, icon, defTitle] = TOAST_STYLE[type] || TOAST_STYLE.ok;
+  t.innerHTML = `<span class="material-symbols-outlined" style="font-size:28px;flex:none">${icon}</span>` +
+    `<span class="min-w-0"><b class="block">${esc(title || defTitle)}</b><span class="block" style="opacity:.95">${esc(msg)}</span></span>`;
+  t.className = 'fixed left-1/2 -translate-x-1/2 z-[60] w-[92vw] max-w-md flex items-center gap-3 px-4 py-3 rounded-2xl text-white text-sm shadow-xl ' + bg;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.add('hidden'), type === 'ok' ? 4500 : 6500);
+}
+function setSync(text) { $('#syncStatus').textContent = text; }
+
+/* ---------- Audio notifikasi (Web Audio API, tanpa file eksternal) ---------- */
+let audioCtx = null;
+function getAudio() {
+  try {
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return null;
+    if (!audioCtx) audioCtx = new AC();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    return audioCtx;
+  } catch (e) { return null; }
+}
+// Browser mobile hanya mengizinkan suara setelah ada sentuhan pengguna: "buka kunci" pada interaksi pertama.
+['pointerdown', 'touchstart', 'click', 'keydown'].forEach((ev) =>
+  document.addEventListener(ev, getAudio, { passive: true }));
+
+function tone(ctx, freq, start, dur, type, vol) {
+  const osc = ctx.createOscillator(), gain = ctx.createGain();
+  osc.type = type;
+  osc.frequency.setValueAtTime(freq, start);
+  gain.gain.setValueAtTime(0.0001, start);
+  gain.gain.exponentialRampToValueAtTime(vol, start + 0.015);
+  gain.gain.exponentialRampToValueAtTime(0.0001, start + dur);
+  osc.connect(gain); gain.connect(ctx.destination);
+  osc.start(start); osc.stop(start + dur + 0.03);
+}
+/** kind: 'new' (simpan baru), 'update' (perbarui), 'offline' (tersimpan lokal / peringatan) */
+function playSound(kind) {
+  const ctx = getAudio();
+  if (!ctx) return;
+  const t = ctx.currentTime + 0.03;
+  if (kind === 'new') {            // melodi naik C-E-G-C
+    [523.25, 659.25, 783.99, 1046.5].forEach((f, i) => tone(ctx, f, t + i * 0.11, 0.3, 'sine', 0.28));
+  } else if (kind === 'update') {  // double beep
+    tone(ctx, 880, t, 0.11, 'square', 0.12);
+    tone(ctx, 880, t + 0.19, 0.11, 'square', 0.12);
+  } else if (kind === 'error') {   // gagal: dua nada turun
+    tone(ctx, 392, t, 0.18, 'sawtooth', 0.14);
+    tone(ctx, 262, t + 0.2, 0.3, 'sawtooth', 0.14);
+  } else {                         // offline: satu nada rendah pendek
+    tone(ctx, 196, t, 0.25, 'triangle', 0.35);
+  }
+}
+
+/* ---------- API ---------- */
+/** Error dengan err.network = true berarti server tidak terjangkau (offline / timeout). */
+async function apiPost(payload, timeoutMs = 25000) {
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), timeoutMs);
+  let r;
+  try {
+    r = await fetch(API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // hindari preflight CORS
+      body: JSON.stringify(payload),
+      signal: ctrl.signal
+    });
+  } catch (e) {
+    const err = new Error('Server tidak terjangkau');
+    err.network = true;
+    throw err;
+  } finally { clearTimeout(timer); }
+  let j;
+  try { j = await r.json(); }
+  catch (e) { throw new Error('Respons server tidak valid. Periksa deployment Apps Script (akses: Anyone).'); }
+  if (!j.ok) throw new Error(j.error || 'Terjadi kesalahan');
+  return j;
+}
+async function apiList() {
+  const r = await fetch(API_URL + '?action=list&_=' + Date.now());
+  const j = await r.json();
+  if (!j.ok) throw new Error(j.error || 'Gagal memuat data');
+  return j.data;
+}
+
+/* ---------- Antrian offline ---------- */
+const PENDING_KEY = 'mutabaah_pending';
+const getPending = () => { try { return JSON.parse(localStorage.getItem(PENDING_KEY) || '[]'); } catch (e) { return []; } };
+const setPending = (a) => { try { localStorage.setItem(PENDING_KEY, JSON.stringify(a)); } catch (e) {} updatePendingNote(); };
+function updatePendingNote() {
+  const n = getPending().length, el = $('#pendingNote');
+  if (n) { el.textContent = `${n} laporan menunggu terkirim (akan dikirim otomatis saat online).`; el.classList.remove('hidden'); }
+  else el.classList.add('hidden');
+}
+function queueRecord(rec) {
+  // Laporan santri + tanggal yang sama menggantikan yang lama (server juga upsert)
+  const q = getPending().filter((x) => !(x.nama === rec.nama && x.tanggal === rec.tanggal));
+  q.push(rec);
+  setPending(q);
+}
+let flushing = false;
+async function flushPending() {
+  if (flushing || !configured() || !navigator.onLine) return;
+  const q = getPending();
+  if (!q.length) return;
+  flushing = true;
+  let sent = 0, failed = 0;
+  let left = [];
+  for (let i = 0; i < q.length; i++) {
+    try { await apiPost({ action: 'save', record: q[i] }); sent++; }
+    catch (e) {
+      if (e.network) { left = q.slice(i); break; }  // server belum terjangkau: sisanya tetap antre
+      failed++;                                      // ditolak server: tidak akan pernah berhasil
+    }
+  }
+  setPending(left);
+  flushing = false;
+  if (sent) loadData(true);
+  if (failed) {
+    playSound('error');
+    toast(`${failed} laporan tertunda ditolak server dan dihapus dari antrean.`, 'error', 'Gagal Terkirim');
+  } else if (sent) {
+    playSound('new');
+    toast(`${sent} laporan tertunda berhasil terkirim ke server.`, 'ok', 'Berhasil Terkirim');
+  }
+}
+
+/* ---------- Load data ---------- */
+async function loadData(silent) {
+  const cacheKey = 'mutabaah_cache';
+  if (!configured()) {
+    setSync('API belum dikonfigurasi (isi API_URL)');
+    try { records = JSON.parse(localStorage.getItem(cacheKey) || '[]'); } catch (e) { records = []; }
+    renderRekap();
+    return;
+  }
+  try {
+    if (!silent) setSync('Memuat data…');
+    records = await apiList();
+    try { localStorage.setItem(cacheKey, JSON.stringify(records)); } catch (e) {}
+    const d = new Date();
+    setSync(`Tersinkron ${pad(d.getHours())}:${pad(d.getMinutes())} • ${records.length} data`);
+  } catch (e) {
+    try { records = JSON.parse(localStorage.getItem(cacheKey) || '[]'); } catch (x) { records = []; }
+    setSync('Offline — menampilkan data tersimpan');
+  }
+  renderRekap();
+}
+
+/* ---------- Form ---------- */
+function seg(name, val, label) {
+  return `<label class="flex-1"><input type="radio" name="${name}" value="${val}" class="sr-only peer">
+    <span class="block text-center text-sm py-2 rounded-lg border border-slate-300 bg-white text-slate-600 cursor-pointer select-none peer-checked:bg-emerald-600 peer-checked:border-emerald-600 peer-checked:text-white peer-focus-visible:ring-2 peer-focus-visible:ring-emerald-400">${label}</span></label>`;
+}
+function buildForm() {
+  $('#nama').innerHTML = '<option value="">— Pilih nama santri —</option>' + SANTRI.map((n) => `<option>${esc(n)}</option>`).join('');
+  $('#fSantri').innerHTML = '<option value="">Semua Santri</option>' + SANTRI.map((n) => `<option>${esc(n)}</option>`).join('');
+  $('#prayerList').innerHTML = PRAYERS.map(([k, label]) => `
+    <div class="prayerCard rounded-xl border border-slate-200 p-3 space-y-2" data-k="${k}">
+      <div class="font-semibold text-emerald-800">${label}</div>
+      <div class="flex gap-2">${seg(k + 'Jamaah', 'Berjamaah', 'Berjamaah')}${seg(k + 'Jamaah', 'Sendiri', 'Sendiri')}</div>
+      <div class="flex gap-2">${seg(k + 'Waktu', 'Tepat Waktu', 'Tepat Waktu')}${seg(k + 'Waktu', 'Masbuk', 'Masbuk')}</div>
+    </div>`).join('');
+  $('#tanggal').value = todayStr();
+  $('#tanggal').max = todayStr();
+  try { const last = localStorage.getItem('mutabaah_last_nama'); if (last && SANTRI.includes(last)) $('#nama').value = last; } catch (e) {}
+
+  $$('[data-state-for]').forEach((el) => {
+    const input = $('#' + el.dataset.stateFor);
+    const sync = () => { el.textContent = input.checked ? 'Ya' : 'Tidak'; };
+    input.addEventListener('change', () => {
+      sync();
+      if (input.id === 'tahajjud') {
+        $('#rakaatWrap').classList.toggle('hidden', !input.checked);
+        if (input.checked) $('#rakaat').focus(); else $('#rakaat').value = '';
+      }
+    });
+    sync();
+  });
+  $$('#prayerList input[type=radio]').forEach((r) => r.addEventListener('change', () => {
+    r.closest('.prayerCard').classList.remove('border-rose-400', 'bg-rose-50');
+  }));
+}
+
+function collect() {
+  const nama = $('#nama').value;
+  const tanggal = $('#tanggal').value;
+  if (!nama) { toast('Pilih nama santri dulu', 'error'); $('#nama').focus(); return null; }
+  if (!tanggal) { toast('Tanggal laporan wajib diisi', 'error'); return null; }
+  const rec = { nama, tanggal };
+  rec.tahajjud = $('#tahajjud').checked ? 'Ya' : 'Tidak';
+  rec.rakaat = 0;
+  if (rec.tahajjud === 'Ya') {
+    const n = parseInt($('#rakaat').value, 10);
+    if (!n || n < 1) { toast('Isi jumlah rakaat tahajjud', 'error'); $('#rakaat').focus(); return null; }
+    rec.rakaat = n;
+  }
+  rec.dzikirPagi = $('#dzikirPagi').checked ? 'Ya' : 'Tidak';
+  rec.dzikirSore = $('#dzikirSore').checked ? 'Ya' : 'Tidak';
+  let firstMissing = null;
+  PRAYERS.forEach(([k, label]) => {
+    const j = document.querySelector(`input[name="${k}Jamaah"]:checked`);
+    const w = document.querySelector(`input[name="${k}Waktu"]:checked`);
+    if (!j || !w) {
+      const card = document.querySelector(`.prayerCard[data-k="${k}"]`);
+      card.classList.add('border-rose-400', 'bg-rose-50');
+      if (!firstMissing) firstMissing = card;
+    } else { rec[k + 'Jamaah'] = j.value; rec[k + 'Waktu'] = w.value; }
+  });
+  if (firstMissing) {
+    toast('Lengkapi pilihan semua sholat wajib', 'error');
+    firstMissing.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    return null;
+  }
+  rec.catatan = $('#catatan').value.trim();
+  return rec;
+}
+
+function resetForm() {
+  $('#tahajjud').checked = false; $('#dzikirPagi').checked = false; $('#dzikirSore').checked = false;
+  ['tahajjud', 'dzikirPagi', 'dzikirSore'].forEach((id) => $('#' + id).dispatchEvent(new Event('change')));
+  $('#rakaat').value = ''; $('#catatan').value = '';
+  $$('#prayerList input[type=radio]').forEach((r) => { r.checked = false; });
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+$('#mutabaahForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const rec = collect();
+  if (!rec) return;
+  const btn = $('#btnSubmit');
+  btn.disabled = true;
+  btn.lastElementChild.textContent = 'Mengirim…';
+  try { localStorage.setItem('mutabaah_last_nama', rec.nama); } catch (x) {}
+  // Notifikasi + suara baru muncul SETELAH ada hasil dari server (bukan saat tombol ditekan).
+  try {
+    if (!configured()) throw new Error('API_URL belum diisi di index.html');
+    if (!navigator.onLine) { const off = new Error('offline'); off.network = true; throw off; }
+    const j = await apiPost({ action: 'save', record: rec });
+    // 1) BERHASIL — server mengonfirmasi tersimpan
+    playSound(j.updated ? 'update' : 'new');
+    toast(j.updated ? 'Laporan hari itu berhasil diperbarui di server.' : 'Alhamdulillah, laporan berhasil disimpan di server.',
+      'ok', j.updated ? 'Berhasil Diperbarui' : 'Berhasil Disimpan');
+    resetForm();
+    loadData(true);
+  } catch (err) {
+    if (err.network) {
+      // 2) MENUNGGU KONEKSI — disimpan di perangkat, dikirim otomatis nanti
+      queueRecord(rec);
+      playSound('offline');
+      toast('Belum ada koneksi ke server. Laporan disimpan di perangkat dan dikirim otomatis saat online.', 'warn', 'Menunggu Koneksi');
+      resetForm();
+    } else {
+      // 3) GAGAL — server menolak / konfigurasi salah; data TIDAK tersimpan, isian dipertahankan
+      playSound('error');
+      toast(err.message, 'error', 'Gagal Terkirim');
+    }
+  } finally {
+    btn.disabled = false;
+    btn.lastElementChild.textContent = 'Kirim Laporan';
+  }
+});
+
+/* ---------- Admin ---------- */
+const TOKEN_KEY = 'mutabaah_admin_token';
+const isAdmin = () => !!sessionStorage.getItem(TOKEN_KEY);
+let afterLogin = null;
+
+function renderAdmin() {
+  $('#adminArea').innerHTML = isAdmin()
+    ? `<button id="btnLogout" class="text-xs bg-white/15 hover:bg-white/25 rounded-full px-3 py-1.5 flex items-center gap-1"><span class="material-symbols-outlined" style="font-size:18px">verified_user</span>Admin • Keluar</button>`
+    : `<button id="btnLogin" class="text-xs bg-white/15 hover:bg-white/25 rounded-full px-3 py-1.5 flex items-center gap-1"><span class="material-symbols-outlined" style="font-size:18px">lock</span>Admin</button>`;
+  const lo = $('#btnLogout'); if (lo) lo.onclick = () => { logoutAdmin(); toast('Sesi admin diakhiri'); };
+  const li = $('#btnLogin'); if (li) li.onclick = () => openAdminModal(null);
+}
+function logoutAdmin() { sessionStorage.removeItem(TOKEN_KEY); renderAdmin(); }
+function openAdminModal(cb) {
+  afterLogin = cb;
+  $('#admErr').classList.add('hidden');
+  $('#admPass').value = '';
+  const m = $('#adminModal'); m.classList.remove('hidden'); m.classList.add('flex');
+  setTimeout(() => $('#admUser').focus(), 50);
+}
+function closeAdminModal() { const m = $('#adminModal'); m.classList.add('hidden'); m.classList.remove('flex'); afterLogin = null; }
+$('#admCancel').addEventListener('click', closeAdminModal);
+$('#adminModal').addEventListener('click', (e) => { if (e.target.id === 'adminModal') closeAdminModal(); });
+
+$('#adminForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const btn = $('#admSubmit'); btn.disabled = true; btn.textContent = 'Memeriksa…';
+  const err = $('#admErr'); err.classList.add('hidden');
+  try {
+    if (!configured()) throw new Error('API_URL belum diisi di index.html');
+    const j = await apiPost({ action: 'login', username: $('#admUser').value.trim(), password: $('#admPass').value });
+    sessionStorage.setItem(TOKEN_KEY, j.token);
+    const cb = afterLogin;
+    closeAdminModal(); renderAdmin(); toast('Login admin berhasil');
+    if (cb) cb();
+  } catch (ex) {
+    err.textContent = ex.network ? 'Server tidak terjangkau, periksa koneksi internet' : ex.message;
+    err.classList.remove('hidden');
+  } finally { btn.disabled = false; btn.textContent = 'Masuk'; }
+});
+
+/** Jalankan aksi yang butuh admin; minta login jika belum. Tangani token kedaluwarsa. */
+function adminAction(fn) {
+  if (!isAdmin()) { openAdminModal(() => adminAction(fn)); return; }
+  Promise.resolve().then(fn).catch((e) => {
+    if (e && e.message === 'AUTH') {
+      logoutAdmin(); toast('Sesi admin berakhir, silakan login lagi', 'warn');
+      openAdminModal(() => adminAction(fn));
+    } else toast(e.message || 'Gagal', 'error');
+  });
+}
+
+/* ---------- Filter ---------- */
+function weekRange(dateStr) {
+  const d = parseD(dateStr);
+  const diff = (d.getDay() + 6) % 7; // Senin = 0
+  const s = new Date(d); s.setDate(d.getDate() - diff);
+  const e = new Date(s); e.setDate(s.getDate() + 6);
+  return [fmt(s), fmt(e)];
+}
+function currentRange() {
+  const mode = $('#fMode').value;
+  if (mode === 'all') return { range: null, label: 'Semua Data', slug: 'semua-data' };
+  if (mode === 'day') {
+    const d = $('#fDay').value; if (!d) return { err: 'Pilih tanggal' };
+    return { range: [d, d], label: 'Tanggal ' + idDate(d), slug: d };
+  }
+  if (mode === 'week') {
+    const d = $('#fWeek').value; if (!d) return { err: 'Pilih tanggal dalam pekan' };
+    const [s, e] = weekRange(d);
+    return { range: [s, e], label: `Pekan ${idDate(s)} – ${idDate(e)}`, slug: `pekan-${s}_${e}` };
+  }
+  if (mode === 'month') {
+    const m = $('#fMonth').value; if (!m) return { err: 'Pilih bulan' };
+    const [y, mo] = m.split('-').map(Number);
+    const label = new Date(y, mo - 1, 1).toLocaleDateString('id-ID', { month: 'long', year: 'numeric' });
+    return { range: [`${m}-01`, `${m}-31`], label: 'Bulan ' + label, slug: `bulan-${m}` };
+  }
+  let s = $('#fStart').value, e = $('#fEnd').value;
+  if (!s || !e) return { err: 'Isi tanggal awal dan akhir' };
+  if (s > e) [s, e] = [e, s];
+  return { range: [s, e], label: `${idDate(s)} s.d. ${idDate(e)}`, slug: `${s}_${e}` };
+}
+function getRows() {
+  const cr = currentRange();
+  if (cr.err) return { rows: [], cr };
+  const santri = $('#fSantri').value;
+  let rows = records.filter((r) => (!cr.range || (r.tanggal >= cr.range[0] && r.tanggal <= cr.range[1])) && (!santri || r.nama === santri));
+  rows.sort((a, b) => a.tanggal.localeCompare(b.tanggal) || SANTRI.indexOf(a.nama) - SANTRI.indexOf(b.nama));
+  return { rows, cr, santri };
+}
+
+/* ---------- Tabel ---------- */
+function prayerCell(r, k) {
+  const j = r[k + 'Jamaah'], w = r[k + 'Waktu'];
+  if (!j && !w) return '<span class="text-slate-400">-</span>';
+  const jb = j === 'Berjamaah' ? 'background:#d1fae5;color:#065f46' : 'background:#fef3c7;color:#92400e';
+  const wb = w === 'Tepat Waktu' ? 'background:#e0f2fe;color:#075985' : 'background:#ffe4e6;color:#9f1239';
+  return `<span class="badge" style="${jb}">${esc(j)}</span><span class="badge" style="${wb}">${esc(w)}</span>`;
+}
+function yn(v) {
+  return v === 'Ya' ? '<span class="badge" style="background:#d1fae5;color:#065f46">Ya</span>' : '<span class="badge" style="background:#f1f5f9;color:#64748b">Tidak</span>';
+}
+function tableHTML(rows, withActions) {
+  const head = ['No', 'Tanggal', 'Nama Santri', 'Tahajjud', 'Dzikir Pagi', 'Dzikir Sore', ...PRAYERS.map((p) => p[1]), 'Catatan'];
+  if (withActions) head.push('Aksi');
+  const body = rows.map((r, i) => `
+    <tr>
+      <td class="text-center">${i + 1}</td>
+      <td class="whitespace-nowrap">${idDay(r.tanggal)}, ${idDate(r.tanggal)}</td>
+      <td class="font-medium" style="min-width:150px">${esc(r.nama)}</td>
+      <td class="text-center">${r.tahajjud === 'Ya' ? `<span class="badge" style="background:#d1fae5;color:#065f46">Ya • ${Number(r.rakaat) || 0} rakaat</span>` : yn('Tidak')}</td>
+      <td class="text-center">${yn(r.dzikirPagi)}</td>
+      <td class="text-center">${yn(r.dzikirSore)}</td>
+      ${PRAYERS.map(([k]) => `<td class="text-center" style="min-width:90px">${prayerCell(r, k)}</td>`).join('')}
+      <td style="min-width:160px;white-space:pre-wrap">${esc(r.catatan) || '<span class="text-slate-400">-</span>'}</td>
+      ${withActions ? `<td class="text-center"><button class="btnDel text-rose-600 hover:bg-rose-50 rounded-lg p-1" data-id="${esc(r.id)}" title="Hapus"><span class="material-symbols-outlined">delete</span></button></td>` : ''}
+    </tr>`).join('');
+  return `<table class="tbl w-full text-sm border-collapse"><thead><tr>${head.map((h) => `<th>${h}</th>`).join('')}</tr></thead><tbody>${body}</tbody></table>`;
+}
+
+function renderRekap() {
+  const { rows, cr } = getRows();
+  const info = $('#rekapInfo'), host = $('#rekapTable');
+  if (cr.err) { info.textContent = ''; host.innerHTML = `<p class="text-center text-slate-500 py-8">${esc(cr.err)} untuk menampilkan rekap.</p>`; return; }
+  info.textContent = `${cr.label} • ${rows.length} laporan`;
+  host.innerHTML = rows.length ? tableHTML(rows, true) : '<p class="text-center text-slate-500 py-8">Belum ada data pada periode ini.</p>';
+  $$('.btnDel').forEach((b) => b.addEventListener('click', () => deleteRow(b.dataset.id)));
+}
+
+function updateFilterUI() {
+  const m = $('#fMode').value;
+  $('#gDay').classList.toggle('hidden', m !== 'day');
+  $('#gWeek').classList.toggle('hidden', m !== 'week');
+  $('#gMonth').classList.toggle('hidden', m !== 'month');
+  $('#gRange').classList.toggle('hidden', m !== 'range');
+  renderRekap();
+}
+['fMode', 'fSantri', 'fDay', 'fWeek', 'fMonth', 'fStart', 'fEnd'].forEach((id) => $('#' + id).addEventListener('change', updateFilterUI));
+$('#btnReload').addEventListener('click', () => loadData(false));
+
+/* ---------- Hapus ---------- */
+function deleteRow(id) {
+  adminAction(async () => {
+    const r = records.find((x) => x.id === id);
+    if (!confirm(`Hapus laporan ${r ? r.nama + ' (' + idDate(r.tanggal) + ')' : 'ini'}?`)) return;
+    await apiPost({ action: 'delete', id, token: sessionStorage.getItem(TOKEN_KEY) });
+    toast('Data dihapus');
+    await loadData(true);
+  });
+}
+$('#btnDelAll').addEventListener('click', () => {
+  adminAction(async () => {
+    if (!confirm('HAPUS SEMUA DATA di server untuk semua santri dan semua tanggal?\nTindakan ini tidak dapat dibatalkan.')) return;
+    if (!confirm('Yakin? Semua data mutabaah akan hilang permanen.')) return;
+    await apiPost({ action: 'deleteAll', token: sessionStorage.getItem(TOKEN_KEY) });
+    toast('Semua data telah dihapus');
+    await loadData(true);
+  });
+});
+
+/* ---------- Export PNG ---------- */
+$('#btnPng').addEventListener('click', () => {
+  const { rows, cr, santri } = getRows();
+  if (cr.err) { toast(cr.err, 'error'); return; }
+  if (!rows.length) { toast('Tidak ada data pada periode ini', 'warn'); return; }
+  adminAction(() => exportPNG(rows, cr, santri));
+});
+
+async function exportPNG(rows, cr, santri) {
+  const btn = $('#btnPng'), label = btn.lastElementChild;
+  btn.disabled = true; label.textContent = 'Membuat gambar…';
+  const host = $('#exportHost');
+  try {
+    const now = new Date().toLocaleString('id-ID', { dateStyle: 'long', timeStyle: 'short' });
+    host.innerHTML = `
+      <div id="exportCard" style="display:inline-block;width:max-content;min-width:1400px;background:#ffffff;padding:32px;font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;color:#0f172a">
+        <div style="display:flex;justify-content:space-between;align-items:flex-end;border-bottom:4px solid #047857;padding-bottom:12px;margin-bottom:16px">
+          <div>
+            <div style="font-size:28px;font-weight:800;color:#065f46">Laporan Mutabaah Harian Santri</div>
+            <div style="font-size:16px;color:#334155;margin-top:4px">${esc(cr.label)}${santri ? ' • ' + esc(santri) : ''} • ${rows.length} laporan</div>
+          </div>
+          <div style="font-size:12px;color:#64748b;text-align:right">Dicetak: ${esc(now)}</div>
+        </div>
+        ${tableHTML(rows, false)}
+      </div>`;
+    if (document.fonts && document.fonts.ready) await document.fonts.ready;
+    await new Promise((r) => setTimeout(r, 150));
+    const el = $('#exportCard');
+    const w = Math.ceil(el.scrollWidth), h = Math.ceil(el.scrollHeight);
+    // Skala adaptif agar tidak melewati batas canvas browser (terutama iOS/Android)
+    let scale = Math.min(2, Math.sqrt(16000000 / (w * h)), 30000 / h);
+    scale = Math.max(0.4, scale);
+    const canvas = await html2canvas(el, {
+      scale, backgroundColor: '#ffffff', useCORS: true, logging: false,
+      width: w, height: h, windowWidth: w, windowHeight: h, scrollX: 0, scrollY: 0
+    });
+    const blob = await new Promise((res) => canvas.toBlob(res, 'image/png'));
+    if (!blob) throw new Error('Gagal membuat gambar (data terlalu besar). Coba filter per bulan atau per pekan.');
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = `Mutabaah_${cr.slug}_${todayStr()}.png`;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 5000);
+    toast('Laporan PNG berhasil diunduh');
+  } finally {
+    host.innerHTML = '';
+    btn.disabled = false; label.textContent = 'Unduh Laporan PNG';
+  }
+}
+
+/* ---------- Tab ---------- */
+function switchTab(t) {
+  $('#view-form').classList.toggle('hidden', t !== 'form');
+  $('#view-rekap').classList.toggle('hidden', t !== 'rekap');
+  $$('.tabBtn').forEach((b) => {
+    const on = b.dataset.tab === t;
+    b.className = 'tabBtn flex-1 rounded-full py-2 text-sm font-semibold flex items-center justify-center gap-1 ' +
+      (on ? 'bg-white text-emerald-800' : 'bg-white/10 text-white');
+  });
+  if (t === 'rekap') loadData(true);
+}
+$$('.tabBtn').forEach((b) => b.addEventListener('click', () => switchTab(b.dataset.tab)));
+
+/* ---------- PWA ---------- */
+let deferredPrompt;
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault(); deferredPrompt = e;
+  const b = $('#btnInstall'); b.classList.remove('hidden'); b.classList.add('flex');
+});
+$('#btnInstall').addEventListener('click', async () => {
+  if (!deferredPrompt) return;
+  deferredPrompt.prompt(); await deferredPrompt.userChoice; deferredPrompt = null;
+  $('#btnInstall').classList.add('hidden');
+});
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+}
+window.addEventListener('online', () => { flushPending(); loadData(true); });
+setInterval(flushPending, 30000); // coba kirim ulang antrean berkala (mis. online tapi server belum terjangkau)
+
+/* ---------- Init ---------- */
+(function init() {
+  buildForm();
+  const t = todayStr();
+  $('#fDay').value = t; $('#fWeek').value = t; $('#fMonth').value = t.slice(0, 7);
+  $('#fStart').value = t.slice(0, 8) + '01'; $('#fEnd').value = t;
+  renderAdmin();
+  updatePendingNote();
+  switchTab('form');
+  loadData(false).then(flushPending);
+})();
+</script>
+</body>
+</html>
